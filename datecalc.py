@@ -42,10 +42,11 @@ def parse(tokens, so_far=None):
 
 def length_tree_in_days(length_tree):
     unit = length_tree.unit.word
+    number = int(length_tree.length.number)
     if unit in ("weeks", "week"):
-        return int(length_tree.length.number) * 7
+        return number * 7
     elif unit in ("days", "day"):
-        return int(length_tree.length.number)
+        return number
     else:
         raise Exception("Unknown time unit '%s'." % unit)
 
