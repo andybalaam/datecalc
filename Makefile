@@ -1,5 +1,5 @@
 all: test
 
 test:
-	python2 datecalc.py
-	python3 datecalc.py
+	echo "today" | python2 datecalc.py
+	echo "today" | python3 datecalc.py

@@ -144,11 +144,13 @@ assert exc
 assert pretty(DateValue(date(2017, 5, 23))).startswith("2017-05-23 (")
 assert pretty(evaluate(parse(lex("2 weeks")))) == "14 days"
 
+
 for arg in sys.argv[1:]:
     print(pretty(evaluate(parse(lex(arg)))))
 
 
-# for ln in sys.stdin:
-#     for v in evaluate(ln[:-1]):
-#         pass
-#     print(pretty(v))
+while True:
+    ln = sys.stdin.readline()
+    if ln is None or ln.strip() == "":
+        break
+    sys.stdout.write("%s\n" % pretty(evaluate(parse(lex(ln.strip())))))
