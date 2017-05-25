@@ -148,7 +148,7 @@ for arg in sys.argv[1:]:
     print(pretty(evaluate(parse(lex(arg)))))
 
 
-#for ln in sys.stdin:
-#    for v in evaluate(ln[:-1]):
-#        pass
-#    print(pretty(v))
+# for ln in sys.stdin:
+#     for v in evaluate(ln[:-1]):
+#         pass
+#     print(pretty(v))
