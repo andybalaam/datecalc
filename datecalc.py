@@ -13,20 +13,20 @@ DateValue = namedtuple("DateValue", ["value"])
 LengthValue = namedtuple("LengthValue", ["days"])
 
 
-def make_token(ch):
-    if ch[0] in "0123456789":
-        return NumberToken(ch)
-    elif ch[0] in "+":
-        return OperatorToken(ch[0], ch[0])
+def make_token(s):
+    if s[0] in "0123456789":
+        return NumberToken(s)
+    elif s[0] in "+":
+        return OperatorToken(s[0], s[0])
     else:
-        return WordToken(ch)
+        return WordToken(s)
 
 
 def lex(chars):
     if len(chars) == 0:
         return []
     else:
-        return [make_token(ch) for ch in chars.split(" ")]
+        return [make_token(s) for s in chars.split(" ")]
 
 
 def parse(tokens, so_far=None):
