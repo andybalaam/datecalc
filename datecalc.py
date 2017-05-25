@@ -10,7 +10,7 @@ WordTree = namedtuple("WordTree", ["word"])
 LengthTree = namedtuple("LengthTree", ["length", "unit"])
 OperatorTree = namedtuple("OperatorTree", ["operator", "left", "right"])
 DateValue = namedtuple("DateValue", ["value"])
-LengthValue = namedtuple("LengthValue", ["length"])
+LengthValue = namedtuple("LengthValue", ["days"])
 
 
 def make_token(ch):
@@ -55,7 +55,7 @@ def evaluate(tree):
         return LengthValue(length_tree_in_days(tree))
     elif type(tree) == OperatorTree:
         left = evaluate(tree.left).value
-        right = evaluate(tree.right).length
+        right = evaluate(tree.right).days
         return DateValue(left + timedelta(days=right))
     elif type(tree) == WordTree:
         if tree.word.word == "today":
@@ -75,7 +75,7 @@ def pretty(value):
     if type(value) == DateValue:
         return value.value.strftime("%Y-%m-%d (%A)")
     else:
-        return "%s days" % value.length
+        return "%s days" % value.days
 
 
 assert lex("today") == [WordToken("today")]
@@ -140,8 +140,8 @@ except:
 assert exc
 
 
-# Adjust for your locale
 assert pretty(DateValue(date(2017, 5, 23))).startswith("2017-05-23 (")
+assert pretty(evaluate(parse(lex("2 weeks")))) == "14 days"
 
 for arg in sys.argv[1:]:
     print(pretty(evaluate(parse(lex(arg)))))
