@@ -30,16 +30,16 @@ def parse(tokens, so_far=None):
     if len(tokens) == 0:
         return so_far
     elif tokens[0][0] == "NumberToken":
-        return LengthTree(tokens[0], tokens[1])
+        return LengthTree(tokens[0][1], tokens[1][1])
     elif tokens[0][0] == "OperatorToken":
-        return OperatorTree(tokens[0], so_far, parse(tokens[1:]))
+        return OperatorTree(tokens[0][1], so_far, parse(tokens[1:]))
     else: # Must be WordToken
-        return parse(tokens[1:], WordTree(tokens[0]))
+        return parse(tokens[1:], WordTree(tokens[0][1]))
 
 
 def length_tree_in_days(length_tree):
-    unit = length_tree.unit[1]
-    number = int(length_tree.length[1])
+    unit = length_tree.unit
+    number = int(length_tree.length)
     if unit in ("weeks", "week"):
         return number * 7
     elif unit in ("days", "day"):
@@ -56,14 +56,14 @@ def evaluate(tree):
         right = evaluate(tree.right).days
         return DateValue(left + timedelta(days=right))
     elif type(tree) == WordTree:
-        if tree.word[1] == "today":
+        if tree.word == "today":
             return DateValue(date.today())
-        elif tree.word[1] == "tomorrow":
+        elif tree.word == "tomorrow":
             return DateValue(date.today() + timedelta(days=1))
-        elif tree.word[1] == "yesterday":
+        elif tree.word == "yesterday":
             return DateValue(date.today() - timedelta(days=1))
         else:
-            raise Exception("Unknown word '%s'." % tree.word[1])
+            raise Exception("Unknown word '%s'." % tree.word)
 
     else:
         raise Exception("Unknown tree type '%s'." % type(tree))
@@ -91,22 +91,22 @@ assert (
 )
 
 
-assert parse(lex("today")) == WordTree(("WordToken", "today"))
-assert parse(lex("tomorrow")) == WordTree(("WordToken", "tomorrow"))
+assert parse(lex("today")) == WordTree("today")
+assert parse(lex("tomorrow")) == WordTree("tomorrow")
 assert (
     parse(lex("2 days")) ==
-    LengthTree(("NumberToken", "2"), ("WordToken", "days"))
+    LengthTree("2", "days")
 )
 assert (
     parse(lex("3 weeks")) ==
-    LengthTree(("NumberToken", "3"), ("WordToken", "weeks"))
+    LengthTree("3", "weeks")
 )
 assert (
     parse(lex("today + 3 days")) ==
     OperatorTree(
-        ("OperatorToken", "+"),
-        WordTree(("WordToken", "today")),
-        LengthTree(("NumberToken", "3"), ("WordToken", "days"))
+        "+",
+        WordTree("today"),
+        LengthTree("3", "days")
     )
 )
 
