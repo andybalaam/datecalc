@@ -3,9 +3,6 @@ from datetime import date, timedelta
 import sys
 
 
-WordToken = namedtuple("WordToken", ["word"])
-NumberToken = namedtuple("NumberToken", ["number"])
-OperatorToken = namedtuple("OperatorToken", ["name", "tag"])
 WordTree = namedtuple("WordTree", ["word"])
 LengthTree = namedtuple("LengthTree", ["length", "unit"])
 OperatorTree = namedtuple("OperatorTree", ["operator", "left", "right"])
@@ -15,11 +12,11 @@ LengthValue = namedtuple("LengthValue", ["days"])
 
 def make_token(s):
     if s[0] in "0123456789":
-        return NumberToken(s)
+        return ("NumberToken", s)
     elif s[0] in "+":
-        return OperatorToken(s[0], s[0])
+        return ("OperatorToken", s[0])
     else:
-        return WordToken(s)
+        return ("WordToken", s)
 
 
 def lex(chars):
@@ -32,17 +29,17 @@ def lex(chars):
 def parse(tokens, so_far=None):
     if len(tokens) == 0:
         return so_far
-    elif type(tokens[0]) == NumberToken:
+    elif tokens[0][0] == "NumberToken":
         return LengthTree(tokens[0], tokens[1])
-    elif type(tokens[0]) == OperatorToken:
+    elif tokens[0][0] == "OperatorToken":
         return OperatorTree(tokens[0], so_far, parse(tokens[1:]))
-    else:
+    else: # Must be WordToken
         return parse(tokens[1:], WordTree(tokens[0]))
 
 
 def length_tree_in_days(length_tree):
-    unit = length_tree.unit.word
-    number = int(length_tree.length.number)
+    unit = length_tree.unit[1]
+    number = int(length_tree.length[1])
     if unit in ("weeks", "week"):
         return number * 7
     elif unit in ("days", "day"):
@@ -59,14 +56,14 @@ def evaluate(tree):
         right = evaluate(tree.right).days
         return DateValue(left + timedelta(days=right))
     elif type(tree) == WordTree:
-        if tree.word.word == "today":
+        if tree.word[1] == "today":
             return DateValue(date.today())
-        elif tree.word.word == "tomorrow":
+        elif tree.word[1] == "tomorrow":
             return DateValue(date.today() + timedelta(days=1))
-        elif tree.word.word == "yesterday":
+        elif tree.word[1] == "yesterday":
             return DateValue(date.today() - timedelta(days=1))
         else:
-            raise Exception("Unknown word '%s'." % tree.word.word)
+            raise Exception("Unknown word '%s'." % tree.word[1])
 
     else:
         raise Exception("Unknown tree type '%s'." % type(tree))
@@ -79,31 +76,37 @@ def pretty(value):
         return "%s days" % value.days
 
 
-assert lex("today") == [WordToken("today")]
-assert lex("tomorrow") == [WordToken("tomorrow")]
-assert lex("2 days") == [NumberToken("2"), WordToken("days")]
-assert lex("3 weeks") == [NumberToken("3"), WordToken("weeks")]
+assert lex("today") == [("WordToken", "today")]
+assert lex("tomorrow") == [("WordToken", "tomorrow")]
+assert lex("2 days") == [("NumberToken", "2"), ("WordToken", "days")]
+assert lex("3 weeks") == [("NumberToken", "3"), ("WordToken", "weeks")]
 assert (
     lex("today + 3 days") ==
     [
-        WordToken("today"),
-        OperatorToken("+", "+"),
-        NumberToken("3"),
-        WordToken("days")
+        ("WordToken", "today"),
+        ("OperatorToken", "+"),
+        ("NumberToken", "3"),
+        ("WordToken", "days")
     ]
 )
 
 
-assert parse(lex("today")) == WordTree(WordToken("today"))
-assert parse(lex("tomorrow")) == WordTree(WordToken("tomorrow"))
-assert parse(lex("2 days")) == LengthTree(NumberToken("2"), WordToken("days"))
-assert parse(lex("3 weeks")) == LengthTree(NumberToken("3"), WordToken("weeks"))
+assert parse(lex("today")) == WordTree(("WordToken", "today"))
+assert parse(lex("tomorrow")) == WordTree(("WordToken", "tomorrow"))
+assert (
+    parse(lex("2 days")) ==
+    LengthTree(("NumberToken", "2"), ("WordToken", "days"))
+)
+assert (
+    parse(lex("3 weeks")) ==
+    LengthTree(("NumberToken", "3"), ("WordToken", "weeks"))
+)
 assert (
     parse(lex("today + 3 days")) ==
     OperatorTree(
-        OperatorToken("+", "+"),
-        WordTree(WordToken("today")),
-        LengthTree(NumberToken("3"), WordToken("days"))
+        ("OperatorToken", "+"),
+        WordTree(("WordToken", "today")),
+        LengthTree(("NumberToken", "3"), ("WordToken", "days"))
     )
 )
 
