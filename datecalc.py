@@ -3,9 +3,6 @@ from datetime import date, timedelta
 import sys
 
 
-WordTree = namedtuple("WordTree", ["word"])
-LengthTree = namedtuple("LengthTree", ["length", "unit"])
-OperatorTree = namedtuple("OperatorTree", ["operator", "left", "right"])
 DateValue = namedtuple("DateValue", ["value"])
 LengthValue = namedtuple("LengthValue", ["days"])
 
@@ -30,16 +27,16 @@ def parse(tokens, so_far=None):
     if len(tokens) == 0:
         return so_far
     elif tokens[0][0] == "NumberToken":
-        return LengthTree(tokens[0][1], tokens[1][1])
+        return ("LengthTree", tokens[0][1], tokens[1][1])
     elif tokens[0][0] == "OperatorToken":
-        return OperatorTree(tokens[0][1], so_far, parse(tokens[1:]))
+        return ("OperatorTree", tokens[0][1], so_far, parse(tokens[1:]))
     else: # Must be WordToken
-        return parse(tokens[1:], WordTree(tokens[0][1]))
+        return parse(tokens[1:], ("WordTree", tokens[0][1]))
 
 
 def length_tree_in_days(length_tree):
-    unit = length_tree.unit
-    number = int(length_tree.length)
+    unit = length_tree[2]
+    number = int(length_tree[1])
     if unit in ("weeks", "week"):
         return number * 7
     elif unit in ("days", "day"):
@@ -49,24 +46,24 @@ def length_tree_in_days(length_tree):
 
 
 def evaluate(tree):
-    if type(tree) == LengthTree:
+    if tree[0] == "LengthTree":
         return LengthValue(length_tree_in_days(tree))
-    elif type(tree) == OperatorTree:
-        left = evaluate(tree.left).value
-        right = evaluate(tree.right).days
+    elif tree[0] == "OperatorTree":
+        left = evaluate(tree[2]).value
+        right = evaluate(tree[3]).days
         return DateValue(left + timedelta(days=right))
-    elif type(tree) == WordTree:
-        if tree.word == "today":
+    elif tree[0] == "WordTree":
+        if tree[1] == "today":
             return DateValue(date.today())
-        elif tree.word == "tomorrow":
+        elif tree[1] == "tomorrow":
             return DateValue(date.today() + timedelta(days=1))
-        elif tree.word == "yesterday":
+        elif tree[1] == "yesterday":
             return DateValue(date.today() - timedelta(days=1))
         else:
-            raise Exception("Unknown word '%s'." % tree.word)
+            raise Exception("Unknown word '%s'." % tree[1])
 
     else:
-        raise Exception("Unknown tree type '%s'." % type(tree))
+        raise Exception("Unknown tree type '%s'." % tree[0])
 
 
 def pretty(value):
@@ -91,22 +88,22 @@ assert (
 )
 
 
-assert parse(lex("today")) == WordTree("today")
-assert parse(lex("tomorrow")) == WordTree("tomorrow")
+assert parse(lex("today")) == ("WordTree", "today")
+assert parse(lex("tomorrow")) == ("WordTree", "tomorrow")
 assert (
     parse(lex("2 days")) ==
-    LengthTree("2", "days")
+    ("LengthTree", "2", "days")
 )
 assert (
     parse(lex("3 weeks")) ==
-    LengthTree("3", "weeks")
+    ("LengthTree", "3", "weeks")
 )
 assert (
     parse(lex("today + 3 days")) ==
-    OperatorTree(
+    ("OperatorTree",
         "+",
-        WordTree("today"),
-        LengthTree("3", "days")
+        ("WordTree", "today"),
+        ("LengthTree", "3", "days")
     )
 )
 
