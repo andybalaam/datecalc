@@ -22,17 +22,21 @@ def lex(chars):
 def parse(tokens, so_far=None):
     if len(tokens) == 0:
         return so_far
-    elif tokens[0][0] == "NumberToken":
-        return ("LengthTree", tokens[0][1], tokens[1][1])
-    elif tokens[0][0] == "OperatorToken":
-        return ("OperatorTree", tokens[0][1], so_far, parse(tokens[1:]))
+
+    tok = tokens[0]
+    other_toks = tokens[1:]
+    if tok[0] == "NumberToken":
+        next_tok = tokens[1]
+        return ("LengthTree", tok[1], next_tok[1])
+    elif tok[0] == "OperatorToken":
+        return ("OperatorTree", tok[1], so_far, parse(other_toks))
     else: # Must be WordToken
-        return parse(tokens[1:], ("WordTree", tokens[0][1]))
+        return parse(other_toks, ("WordTree", tok[1]))
 
 
 def length_tree_in_days(length_tree):
-    unit = length_tree[2]
     number = int(length_tree[1])
+    unit = length_tree[2]
     if unit in ("weeks", "week"):
         return number * 7
     elif unit in ("days", "day"):
@@ -45,9 +49,9 @@ def evaluate(tree):
     if tree[0] == "LengthTree":
         return ("LengthValue", length_tree_in_days(tree))
     elif tree[0] == "OperatorTree":
-        left = evaluate(tree[2])[1]
-        right = evaluate(tree[3])[1]
-        return ("DateValue", left + timedelta(days=right))
+        left = evaluate(tree[2])
+        right = evaluate(tree[3])
+        return ("DateValue", left[1] + timedelta(days=right[1]))
     elif tree[0] == "WordTree":
         if tree[1] == "today":
             return ("DateValue", date.today())
