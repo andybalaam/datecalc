@@ -3,10 +3,6 @@ from datetime import date, timedelta
 import sys
 
 
-DateValue = namedtuple("DateValue", ["value"])
-LengthValue = namedtuple("LengthValue", ["days"])
-
-
 def make_token(s):
     if s[0] in "0123456789":
         return ("NumberToken", s)
@@ -47,18 +43,18 @@ def length_tree_in_days(length_tree):
 
 def evaluate(tree):
     if tree[0] == "LengthTree":
-        return LengthValue(length_tree_in_days(tree))
+        return ("LengthValue", length_tree_in_days(tree))
     elif tree[0] == "OperatorTree":
-        left = evaluate(tree[2]).value
-        right = evaluate(tree[3]).days
-        return DateValue(left + timedelta(days=right))
+        left = evaluate(tree[2])[1]
+        right = evaluate(tree[3])[1]
+        return ("DateValue", left + timedelta(days=right))
     elif tree[0] == "WordTree":
         if tree[1] == "today":
-            return DateValue(date.today())
+            return ("DateValue", date.today())
         elif tree[1] == "tomorrow":
-            return DateValue(date.today() + timedelta(days=1))
+            return ("DateValue", date.today() + timedelta(days=1))
         elif tree[1] == "yesterday":
-            return DateValue(date.today() - timedelta(days=1))
+            return ("DateValue", date.today() - timedelta(days=1))
         else:
             raise Exception("Unknown word '%s'." % tree[1])
 
@@ -67,10 +63,10 @@ def evaluate(tree):
 
 
 def pretty(value):
-    if type(value) == DateValue:
-        return value.value.strftime("%Y-%m-%d (%A)")
+    if value[0] == "DateValue":
+        return value[1].strftime("%Y-%m-%d (%A)")
     else:
-        return "%s days" % value.days
+        return "%s days" % value[1]
 
 
 assert lex("today") == [("WordToken", "today")]
@@ -108,24 +104,24 @@ assert (
 )
 
 
-assert evaluate(parse(lex("today"))) == DateValue(date.today())
+assert evaluate(parse(lex("today"))) == ("DateValue", date.today())
 assert (
     evaluate(parse(lex("tomorrow"))) ==
-    DateValue(date.today() + timedelta(days=1))
+    ("DateValue", date.today() + timedelta(days=1))
 )
 assert (
     evaluate(parse(lex("yesterday"))) ==
-    DateValue(date.today() - timedelta(days=1))
+    ("DateValue", date.today() - timedelta(days=1))
 )
-assert evaluate(parse(lex("2 days"))) == LengthValue(2)
-assert evaluate(parse(lex("3 weeks"))) == LengthValue(21)
+assert evaluate(parse(lex("2 days"))) == ("LengthValue", 2)
+assert evaluate(parse(lex("3 weeks"))) == ("LengthValue", 21)
 assert (
     evaluate(parse(lex("today + 3 days"))) ==
-    DateValue(date.today() + timedelta(days=3))
+    ("DateValue", date.today() + timedelta(days=3))
 )
 assert (
     evaluate(parse(lex("tomorrow + 1 day"))) ==
-    DateValue(date.today() + timedelta(days=2))
+    ("DateValue", date.today() + timedelta(days=2))
 )
 try:
     evaluate(parse(lex("banana")))
@@ -141,7 +137,7 @@ except:
 assert exc
 
 
-assert pretty(DateValue(date(2017, 5, 23))).startswith("2017-05-23 (")
+assert pretty(("DateValue", date(2017, 5, 23))).startswith("2017-05-23 (")
 assert pretty(evaluate(parse(lex("2 weeks")))) == "14 days"
 
 
