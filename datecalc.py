@@ -84,18 +84,16 @@ assert (
 )
 
 
-assert parse(lex("today")) == ("WordTree", "today")
-assert parse(lex("tomorrow")) == ("WordTree", "tomorrow")
+def p(x):
+    return parse(lex(x))
+
+
+assert p("today") == ("WordTree", "today")
+assert p("tomorrow") == ("WordTree", "tomorrow")
+assert p("2 days") == ("LengthTree", "2", "days")
+assert p("3 weeks") == ("LengthTree", "3", "weeks")
 assert (
-    parse(lex("2 days")) ==
-    ("LengthTree", "2", "days")
-)
-assert (
-    parse(lex("3 weeks")) ==
-    ("LengthTree", "3", "weeks")
-)
-assert (
-    parse(lex("today + 3 days")) ==
+    p("today + 3 days") ==
     ("OperatorTree",
         "+",
         ("WordTree", "today"),
@@ -104,33 +102,30 @@ assert (
 )
 
 
-assert evaluate(parse(lex("today"))) == ("DateValue", date.today())
-assert (
-    evaluate(parse(lex("tomorrow"))) ==
-    ("DateValue", date.today() + timedelta(days=1))
-)
-assert (
-    evaluate(parse(lex("yesterday"))) ==
-    ("DateValue", date.today() - timedelta(days=1))
-)
-assert evaluate(parse(lex("2 days"))) == ("LengthValue", 2)
-assert evaluate(parse(lex("3 weeks"))) == ("LengthValue", 21)
-assert (
-    evaluate(parse(lex("today + 3 days"))) ==
-    ("DateValue", date.today() + timedelta(days=3))
-)
-assert (
-    evaluate(parse(lex("tomorrow + 1 day"))) ==
-    ("DateValue", date.today() + timedelta(days=2))
-)
+def e(x):
+    return evaluate(parse(lex(x)))
+
+def days(n):
+    return timedelta(days=n)
+
+today = date.today()
+
+
+assert e("today") == ("DateValue", today)
+assert e("tomorrow")  == ("DateValue", today + days(1))
+assert e("yesterday") == ("DateValue", today - days(1))
+assert e("2 days") == ("LengthValue", 2)
+assert e("3 weeks") == ("LengthValue", 21)
+assert e("today + 3 days") == ("DateValue", today + days(3))
+assert e("tomorrow + 1 day") == ("DateValue", today + days(2))
 try:
-    evaluate(parse(lex("banana")))
+    e("banana")
     exc = False
 except:
     exc = True
 assert exc
 try:
-    evaluate(parse(lex("1 banana")))
+    e("1 banana")
     exc = False
 except:
     exc = True
