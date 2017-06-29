@@ -3,7 +3,7 @@
 A calculator for dates.
 
 Written as an example programming language for a workshop where we write our
-own language.
+own language.  See also the [workshop slides](http://artificialworlds.net/presentations/write-your-own-language/write-your-own-language.html).
 
 Should work in Python 2 and Python 3.
 
